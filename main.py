@@ -479,4 +479,5 @@ async def hourly_loop():
 
 server_on()
 
+print("TOKEN VALUE:", os.getenv("TOKEN"))
 bot.run(os.getenv("TOKEN"))
