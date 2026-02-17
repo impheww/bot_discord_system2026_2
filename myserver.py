@@ -2,11 +2,11 @@ from flask import Flask
 from threading import Thread
 import os
 
-app = Flask('')
+app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return "Server is running!"
+    return "Bot is alive"
 
 def run():
     port = int(os.environ.get("PORT", 10000))
