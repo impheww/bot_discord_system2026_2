@@ -5,7 +5,6 @@ import time
 import random
 from discord.ext import tasks
 import datetime
-from myserver import server_on
 
 # ================= TOKEN =================
 
@@ -476,7 +475,6 @@ async def hourly_loop():
     last_messages = [msg1, gif1]
 
 # ================= RUN =================
-server_on()
 
 TOKEN = os.getenv("TOKEN")
 
@@ -484,6 +482,7 @@ print("HELLO TEST")
 print("TOKEN VALUE:", TOKEN)
 
 bot.run(TOKEN)
+
 
 
 
