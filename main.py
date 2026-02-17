@@ -476,11 +476,13 @@ async def hourly_loop():
     last_messages = [msg1, gif1]
 
 # ================= RUN =================
+print("HELLO TEST")
 print("TOKEN VALUE:", TOKEN)
 
 server_on()
 
 bot.run(os.getenv("TOKEN"))
+
 
 
 
