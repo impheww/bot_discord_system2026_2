@@ -10,7 +10,8 @@ from myserver import server_on
 # ================= TOKEN =================
 
 # ================= CONFIG =================
-LOG_CHANNEL_ID = 1470417750319960168
+LOG_CHANNEL_ID = 1470417750319960168 # ห้องบอทอั่งเปา
+ANGPAO_CHANNEL_ID = 1470403835234357258  # ห้องรับลิงก์อั่งเปาใหม่
 
 ROLE_ID = 1069133664362963045  # บทบาทแชร์ดิส
 CHANNEL_ID = 1472149753826377780  # ห้องแจ้งแชร์สำเร็จ
@@ -18,10 +19,10 @@ STICKY_CHANNEL_ID = 1227127117519519764 # ข้อความปักหม�
 
 # ระบบรับยศยืนยัน (เพิ่มใหม่)
 CONFIRM_ROLE_ID = 1049292011997503498 # ยศ Member
-CONFIRM_CHANNEL_ID = 1472547979641749690
+CONFIRM_CHANNEL_ID = 1472547979641749690 # ห้องแชร์สำเร็จ
 
 # ระบบซื้อยศสำเร็จ
-SUCCESS_CHANNEL_ID = 1470997698004914197
+SUCCESS_CHANNEL_ID = 1470997698004914197 # ซื้อยศสำเร็จ
 ROLE_1_ID = 1082885961953853540
 ROLE_2_ID = 1082668970718527508
 ROLE_3_ID = 1082667309254054008
@@ -156,13 +157,14 @@ class AngpaoModal(discord.ui.Modal, title="ส่งลิงก์อั่ง�
 
         if not self.link.value.startswith("https://gift.truemoney.com/"):
             await interaction.response.send_message(
-                "❌ ลิงก์ไม่ถูกต้อง",
+                "❌ ลิงค์อั่งเปาไม่ถูกต้อง",
                 ephemeral=True
             )
             return
 
         cooldown[interaction.user.id] = time.time()
-        log_channel = await bot.fetch_channel(LOG_CHANNEL_ID)
+        log_channel = await bot.fetch_channel(ANGPAO_CHANNEL_ID)
+
 
         embed = discord.Embed(
             title="🧧 มีการส่งลิงก์อั่งเปา ",
@@ -188,7 +190,11 @@ class MainView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
 
-    @discord.ui.button(label="🧧 ส่งลิงก์อั่งเปา", style=discord.ButtonStyle.green)
+    @discord.ui.button(
+        label="ส่งลิงก์อั่งเปา",
+        emoji=discord.PartialEmoji(name="angpao", id=1472134389763932350, animated=True),
+        style=discord.ButtonStyle.green
+    )
     async def send_angpao(self, interaction: discord.Interaction, _):
 
         user_id = interaction.user.id
@@ -270,7 +276,17 @@ async def on_member_update(before, after):
 
         # ระบบซื้อยศ
         elif role.id in [ROLE_1_ID, ROLE_2_ID, ROLE_3_ID, ROLE_4_ID]:
-            await send_purchase_success(after, role, after)
+
+            giver = None
+            async for entry in after.guild.audit_logs(
+                    limit=5,
+                    action=discord.AuditLogAction.member_role_update
+            ):
+                if entry.target.id == after.id:
+                    giver = entry.user
+                    break
+
+            await send_purchase_success(after, role, giver)
 
 # ================= STICKY SYSTEM =================
 
@@ -303,7 +319,7 @@ async def on_message(message):
 
 # ================= ระบบให้ยศซื้อสำเร็จ =================
 
-async def send_purchase_success(member: discord.Member, role: discord.Role, giver: discord.Member):
+async def send_purchase_success(member: discord.Member, role: discord.Role, giver):
     channel = bot.get_channel(SUCCESS_CHANNEL_ID)
     if channel is None:
         return
@@ -327,11 +343,12 @@ async def send_purchase_success(member: discord.Member, role: discord.Role, give
         inline=False
     )
 
-    embed.add_field(
-        name=" ",
-        value=f"`👮 ให้โดย :` {giver.mention}",
-        inline=False
-    )
+    if giver:
+        embed.add_field(
+            name=" ",
+            value=f"`👮 ให้โดย :` {giver.mention}",
+            inline=False
+        )
 
     embed.add_field(
         name=" ",
@@ -343,7 +360,6 @@ async def send_purchase_success(member: discord.Member, role: discord.Role, give
         url="https://i.postimg.cc/3JkfNzdk/standard.gif"
     )
 
-    # 👇 Footer เป็นโปรไฟล์เซิร์ฟ + ชื่อ + เวลา
     guild = member.guild
     embed.set_footer(
         text=f"{guild.name} • {now}",
